@@ -20,9 +20,10 @@ BARK_SERVER = os.getenv("BARK_SERVER", "https://api.day.app")
 # 预设场景（想加新场景直接在这里加一行）
 # ============================================================
 SCENES = {
-    "睡前":  {"app": "健康",    "title": "🌙 睡前模式", "body": "准备休息了"},
-    "专注":  {"app": "备忘录",  "title": "🎯 专注模式", "body": "保持专注"},
-    "回桌面":{"app": "时钟",    "title": "🏠 回桌面",   "body": "返回主界面"},
+    "睡前":  {"shortcut": "健康",    "title": "🌙 睡前模式", "body": "准备休息了"},
+    "专注":  {"shortcut": "番茄ToDo",  "title": "🎯 专注模式", "body": "保持专注"},
+    "娱乐":  {"shortcut": "抖音", "title": "🎮 娱乐模式", "body": "玩得开心"},
+    "回桌面":{"shortcut": "时钟",    "title": "🏠 回桌面",   "body": "返回主界面"},
 }
 
 
@@ -30,10 +31,11 @@ SCENES = {
 # 核心推送函数
 # ============================================================
 async def push_shortcut(
-    shortcut_name: str,
-    input_text: str = "",
-    title: str = "📱 远程指令",
-    body: str = "",
+    await push_shortcut(
+    shortcut_name=scene["shortcut"],  # 改这里，不传 input_text
+    title=scene["title"],
+    body=scene["body"],
+)
 ):
     if not BARK_KEY:
         raise ValueError("未配置 BARK_KEY 环境变量")
@@ -90,7 +92,7 @@ async def mcp_endpoint(request: Request):
                             "properties": {
                                 "scene": {
                                     "type": "string",
-                                    "description": "场景名称，可选值：睡前、专注、娱乐、回桌面、运动"
+                                    "description": "场景名称，可选值：睡前、专注、娱乐、回桌面"
                                 }
                             },
                             "required": ["scene"]
