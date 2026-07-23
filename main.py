@@ -20,35 +20,24 @@ BARK_SERVER = os.getenv("BARK_SERVER", "https://api.day.app")
 # 预设场景（想加新场景直接在这里加一行）
 # ============================================================
 SCENES = {
-    "睡前":  {"shortcut": "健康",    "title": "🌙 睡前模式", "body": "准备休息了"},
-    "专注":  {"shortcut": "番茄ToDo",  "title": "🎯 专注模式", "body": "保持专注"},
-    "娱乐":  {"shortcut": "抖音", "title": "🎮 娱乐模式", "body": "玩得开心"},
-    "回桌面":{"shortcut": "时钟",    "title": "🏠 回桌面",   "body": "返回主界面"},
+    "睡前":  {"title": "🌙 睡前模式", "body": "准备休息了"},
+    "专注":  {"title": "🎯 专注模式", "body": "保持专注"},
+    "娱乐":  {"title": "🎮 娱乐模式", "body": "玩得开心"},
+    "回桌面":{"title": "🏠 回桌面",   "body": "返回主界面"},
 }
 
 
 # ============================================================
 # 核心推送函数
 # ============================================================
-async def push_shortcut(
-    await push_shortcut(
-    shortcut_name=scene["shortcut"],  # 改这里，不传 input_text
-    title=scene["title"],
-    body=scene["body"],
-)
-):
+async def push_bark(title: str, body: str):
     if not BARK_KEY:
-        raise ValueError("未配置 BARK_KEY 环境变量")
-
-    shortcut_url = f"shortcuts://run-shortcut?name={urllib.parse.quote(shortcut_name)}"
-    if input_text:
-        shortcut_url += f"&input={urllib.parse.quote(input_text)}"
+        raise ValueError("未配置 BARK_KEY")
 
     payload = {
         "device_key": BARK_KEY,
         "title": title,
-        "body": body or input_text or shortcut_name,
-        "url": shortcut_url,
+        "body": body,
         "sound": "minuet",
         "level": "active",
     }
@@ -86,7 +75,7 @@ async def mcp_endpoint(request: Request):
                 "tools": [
                     {
                         "name": "go_scene",
-                        "description": "切换手机场景，跳转到对应App。当对话涉及睡觉、专注、运动、娱乐等状态时主动调用。",
+                        "description": "切换手机场景，跳转到对应App。当对话涉及睡觉、专注、娱乐、禁止使用手机等状态时主动调用。",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -123,12 +112,10 @@ async def mcp_endpoint(request: Request):
 
             # 立刻推送，立刻返回，不挂起等待
             try:
-                await push_shortcut(
-                    shortcut_name="跳转App",
-                    input_text=scene["app"],
+                await push_bark(
                     title=scene["title"],
                     body=scene["body"],
-                )
+                    )
                 msg = f"✅ 已触发「{scene_name}」场景，正在跳转到 {scene['app']}"
             except Exception as e:
                 msg = f"⚠️ 推送失败：{str(e)}"
